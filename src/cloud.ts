@@ -47,6 +47,7 @@ export enum Status {
 }
 
 function getMutationVariables(res: AtlasResult): CreateReportInput {
+  // GITHUB_HEAD_REF = branch for PR
   const {
     GITHUB_REPOSITORY: repository,
     GITHUB_SHA: commitID,
