@@ -8,7 +8,6 @@ import * as github from '@actions/github'
 
 // Entry point for GitHub Action runner.
 export async function run(opts: Options): Promise<AtlasResult | void> {
-
   try {
     const bin = await installAtlas(opts.atlasVersion)
     const res = await runAtlas(bin, opts)
