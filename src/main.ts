@@ -4,9 +4,11 @@ import { report, summarize } from './github'
 import { context } from '@actions/github'
 import { reportToCloud } from './cloud'
 import { Options, OptionsFromEnv } from './input'
+import * as github from '@actions/github'
 
 // Entry point for GitHub Action runner.
 export async function run(opts: Options): Promise<AtlasResult | void> {
+
   try {
     const bin = await installAtlas(opts.atlasVersion)
     const res = await runAtlas(bin, opts)
@@ -30,6 +32,7 @@ export async function run(opts: Options): Promise<AtlasResult | void> {
     setFailed((error as Error)?.message ?? error)
   }
 }
-
+console.log(github.context)
+console.log(process.env)
 const opts: Options = OptionsFromEnv(process.env)
 run(opts)
