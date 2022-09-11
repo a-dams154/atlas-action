@@ -32,7 +32,7 @@ export async function run(opts: Options): Promise<AtlasResult | void> {
     setFailed((error as Error)?.message ?? error)
   }
 }
-console.log(github.context)
-console.log(process.env)
+info(JSON.stringify(github.context))
+info(JSON.stringify(process.env))
 const opts: Options = OptionsFromEnv(process.env)
 run(opts)
