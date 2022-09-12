@@ -305,12 +305,12 @@ var __asyncValues = (this && this.__asyncValues) || function (o) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.comment = exports.summarize = exports.report = exports.resolveGitBase = exports.getWorkingDirectory = void 0;
+const core = __importStar(__nccwpck_require__(2186));
 const core_1 = __nccwpck_require__(2186);
 const fs_1 = __nccwpck_require__(7147);
 const promises_1 = __nccwpck_require__(3292);
 const simple_git_1 = __nccwpck_require__(9103);
 const github = __importStar(__nccwpck_require__(5438));
-const core = __importStar(__nccwpck_require__(2186));
 const path = __importStar(__nccwpck_require__(1017));
 function getWorkingDirectory() {
     var _a;
@@ -436,47 +436,62 @@ function icon(n) {
     return `<div align="center"><img src="https://release.ariga.io/images/assets/${n}.svg" /></div>`;
 }
 function comment(opts, text) {
-    var e_1, _a;
-    var _b, _c, _d;
+    var _a;
     return __awaiter(this, void 0, void 0, function* () {
         core.info('### comment');
         if (github.context.eventName == 'pull_request') {
-            core.info('were in a PR');
-            const octokit = github.getOctokit(opts.token);
-            const { name, owner } = github.context.payload.repository;
-            core.info(`name ${name}, owner ${JSON.stringify(owner)}`);
-            core.info(JSON.stringify({
-                owner: owner.login,
-                repo: name,
-                issue_number: (_b = github.context.payload.pull_request) === null || _b === void 0 ? void 0 : _b.number
-            }));
-            const res = yield octokit.rest.issues.listComments({
-                owner: owner.login,
-                repo: name,
-                issue_number: (_c = github.context.payload.pull_request) === null || _c === void 0 ? void 0 : _c.number
-            });
-            try {
-                for (var _e = __asyncValues(octokit.paginate.iterator(octokit.rest.issues.listComments, {
-                    owner: owner.login,
-                    repo: name,
-                    issue_number: (_d = github.context.payload.pull_request) === null || _d === void 0 ? void 0 : _d.number
-                })), _f; _f = yield _e.next(), !_f.done;) {
-                    const { data: comments } = _f.value;
-                    core.info(JSON.stringify(comments));
-                }
-            }
-            catch (e_1_1) { e_1 = { error: e_1_1 }; }
-            finally {
-                try {
-                    if (_f && !_f.done && (_a = _e.return)) yield _a.call(_e);
-                }
-                finally { if (e_1) throw e_1.error; }
-            }
-            core.info(JSON.stringify(res));
+            const pr = {
+                repo: github.context.payload.repository.name,
+                owner: github.context.payload.repository.owner.login,
+                issue_number: (_a = github.context.payload.pull_request) === null || _a === void 0 ? void 0 : _a.number
+            };
+            const found = yield findComment(opts.token, pr);
+            yield upsertComment(opts.token, pr, found);
         }
     });
 }
 exports.comment = comment;
+function upsertComment(token, pr, comment) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const octokit = github.getOctokit(token);
+        const body = `time: ${Date.now()}: Reviewed by atlas-action`;
+        if (!comment) {
+            return octokit.rest.issues.createComment(Object.assign(Object.assign({}, pr), { body }));
+        }
+        octokit.rest.issues.updateComment(Object.assign(Object.assign({ comment_id: comment.id }, pr), { body }));
+        return;
+    });
+}
+function findComment(token, pr) {
+    var e_1, _a;
+    var _b;
+    return __awaiter(this, void 0, void 0, function* () {
+        const octokit = github.getOctokit(token);
+        const { name, owner } = github.context.payload.repository;
+        core.info(`name ${name}, owner ${JSON.stringify(owner)}`);
+        try {
+            for (var _c = __asyncValues(octokit.paginate.iterator(octokit.rest.issues.listComments, {
+                owner: pr.owner,
+                repo: pr.repo,
+                issue_number: pr.issue_number,
+            })), _d; _d = yield _c.next(), !_d.done;) {
+                const { data: comments } = _d.value;
+                for (const comm of comments) {
+                    if ((_b = comm.body) === null || _b === void 0 ? void 0 : _b.indexOf('Reviewed by atlas-action')) {
+                        return comm;
+                    }
+                }
+            }
+        }
+        catch (e_1_1) { e_1 = { error: e_1_1 }; }
+        finally {
+            try {
+                if (_d && !_d.done && (_a = _c.return)) yield _a.call(_c);
+            }
+            finally { if (e_1) throw e_1.error; }
+        }
+    });
+}
 //# sourceMappingURL=github.js.map
 
 /***/ }),

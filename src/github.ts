@@ -1,10 +1,10 @@
+import * as core from '@actions/core'
 import { error, getInput, notice, summary } from '@actions/core'
 import { existsSync } from 'fs'
 import { stat } from 'fs/promises'
 import { simpleGit } from 'simple-git'
 import { Summary } from './atlas'
 import * as github from '@actions/github'
-import * as core from '@actions/core'
 import * as path from 'path'
 import { Options } from './input'
 
@@ -90,10 +90,12 @@ export function summarize(s: Summary, cloudURL?: string): void {
   summary.addHeading('Atlas Lint Report')
   summary.addEOL()
   const steps = s?.Steps || []
+
   interface cell {
     data: string
     header: boolean
   }
+
   type row = (cell | string)[]
   const rows: row[] = [
     [
@@ -132,36 +134,73 @@ function icon(n: string): string {
   return `<div align="center"><img src="https://release.ariga.io/images/assets/${n}.svg" /></div>`
 }
 
+interface Comment {
+  id: number
+  body?: string
+}
+
+interface PullRequest {
+  // The repository name.
+  repo: string
+  // The repository org.
+  owner: string
+  issue_number: number
+}
+
 export async function comment(opts: Options, text: string) {
   core.info('### comment')
   if (github.context.eventName == 'pull_request') {
-    core.info('were in a PR')
-    const octokit = github.getOctokit(opts.token!)
-    const { name, owner } = github.context.payload.repository!
-    core.info(`name ${name}, owner ${JSON.stringify(owner)}`)
-    core.info(
-      JSON.stringify({
-        owner: owner.login,
-        repo: name,
-        issue_number: github.context.payload.pull_request?.number!
-      })
-    )
-    const res = await octokit.rest.issues.listComments({
-      owner: owner.login,
-      repo: name,
+    const pr: PullRequest = {
+      repo: github.context.payload.repository!.name,
+      owner: github.context.payload.repository!.owner.login,
       issue_number: github.context.payload.pull_request?.number!
-    })
-    for await (const { data: comments } of octokit.paginate.iterator(
-      octokit.rest.issues.listComments,
-      {
-        owner: owner.login,
-        repo: name,
-        issue_number: github.context.payload.pull_request?.number!
-      }
-    )) {
-      core.info(JSON.stringify(comments))
     }
+    const found = await findComment(opts.token!, pr)
+    await upsertComment(opts.token!, pr, found)
+  }
+}
 
-    core.info(JSON.stringify(res))
+async function upsertComment(
+  token: string,
+  pr: PullRequest,
+  comment: Comment | undefined
+): Promise<any> {
+  const octokit = github.getOctokit(token)
+  const body = `time: ${Date.now()}: Reviewed by atlas-action`
+  if (!comment) {
+    return octokit.rest.issues.createComment({
+      ...pr,
+      body
+    })
+  }
+  octokit.rest.issues.updateComment({
+    comment_id: comment.id,
+    ...pr,
+    body
+  })
+  return
+}
+
+async function findComment(
+  token: string,
+  pr: PullRequest
+): Promise<Comment | undefined> {
+  const octokit = github.getOctokit(token)
+  const { name, owner } = github.context.payload.repository!
+  core.info(`name ${name}, owner ${JSON.stringify(owner)}`)
+
+  for await (const { data: comments } of octokit.paginate.iterator(
+    octokit.rest.issues.listComments,
+    {
+      owner: pr.owner,
+      repo: pr.repo,
+      issue_number: pr.issue_number
+    }
+  )) {
+    for (const comm of comments) {
+      if (comm.body?.indexOf('Reviewed by atlas-action')) {
+        return comm
+      }
+    }
   }
 }
