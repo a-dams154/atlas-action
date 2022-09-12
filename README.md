@@ -12,7 +12,7 @@ of migration directories and generates insights and diagnostics on the selected 
 * Detect whether destructive or irreversible changes have been made or whether they are dependent on tables'  
   contents and can cause a migration failure.
 
-### Supported directory formats
+### Supported directory formats-------------
 
 This action supports analyzing migration directories in formats
 accepted by different schema migration tools: 
