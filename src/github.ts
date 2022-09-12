@@ -139,10 +139,17 @@ export async function comment(opts: Options, text: string) {
     const octokit = github.getOctokit(opts.token!)
     const { name, owner } = github.context.payload.repository!
     core.info(`name ${name}, owner ${JSON.stringify(owner)}`)
+    core.info(
+      JSON.stringify({
+        owner: owner.login,
+        repo: name,
+        issue_number: github.context.payload.pull_request?.number!
+      })
+    )
     const res = octokit.rest.issues.listComments({
       owner: owner.login,
       repo: name,
-      issue_number: github.context.issue.number
+      issue_number: github.context.payload.pull_request?.number!
     })
     core.info(JSON.stringify(res))
   }

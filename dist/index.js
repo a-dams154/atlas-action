@@ -429,6 +429,7 @@ function icon(n) {
     return `<div align="center"><img src="https://release.ariga.io/images/assets/${n}.svg" /></div>`;
 }
 function comment(opts, text) {
+    var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
         core.info('### comment');
         if (github.context.eventName == 'pull_request') {
@@ -436,10 +437,15 @@ function comment(opts, text) {
             const octokit = github.getOctokit(opts.token);
             const { name, owner } = github.context.payload.repository;
             core.info(`name ${name}, owner ${JSON.stringify(owner)}`);
+            core.info(JSON.stringify({
+                owner: owner.login,
+                repo: name,
+                issue_number: (_a = github.context.payload.pull_request) === null || _a === void 0 ? void 0 : _a.number
+            }));
             const res = octokit.rest.issues.listComments({
                 owner: owner.login,
                 repo: name,
-                issue_number: github.context.issue.number
+                issue_number: (_b = github.context.payload.pull_request) === null || _b === void 0 ? void 0 : _b.number
             });
             core.info(JSON.stringify(res));
         }
