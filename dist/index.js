@@ -442,7 +442,7 @@ function comment(opts, text) {
                 repo: name,
                 issue_number: (_a = github.context.payload.pull_request) === null || _a === void 0 ? void 0 : _a.number
             }));
-            const res = octokit.rest.issues.listComments({
+            const res = yield octokit.rest.issues.listComments({
                 owner: owner.login,
                 repo: name,
                 issue_number: (_b = github.context.payload.pull_request) === null || _b === void 0 ? void 0 : _b.number

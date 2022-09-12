@@ -146,7 +146,7 @@ export async function comment(opts: Options, text: string) {
         issue_number: github.context.payload.pull_request?.number!
       })
     )
-    const res = octokit.rest.issues.listComments({
+    const res = await octokit.rest.issues.listComments({
       owner: owner.login,
       repo: name,
       issue_number: github.context.payload.pull_request?.number!
