@@ -140,7 +140,7 @@ export async function comment(opts: Options, text: string) {
     const { name, owner } = github.context.payload.repository!
     core.info(`name ${name}, owner ${JSON.stringify(owner)}`)
     const res = octokit.rest.issues.listComments({
-      owner: owner.name!,
+      owner: owner.login,
       repo: name,
       issue_number: github.context.issue.number
     })
