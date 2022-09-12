@@ -10,6 +10,7 @@ export type Options = {
   arigaURL?: string
   projectEnv?: string
   schemaInsights: boolean
+  token?: string
 }
 
 export function OptionsFromEnv(env: Dict<string>): Options {
@@ -52,6 +53,9 @@ export function OptionsFromEnv(env: Dict<string>): Options {
   }
   if (input('project-env')) {
     opts.projectEnv = input('project-env')
+  }
+  if (input('token')) {
+    opts.token = input('token')
   }
   return opts
 }

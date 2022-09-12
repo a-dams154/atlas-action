@@ -4,6 +4,7 @@ import { stat } from 'fs/promises'
 import { simpleGit } from 'simple-git'
 import { Summary } from './atlas'
 import * as github from '@actions/github'
+import * as core from '@actions/core'
 import * as path from 'path'
 import { Options } from './input'
 
@@ -129,4 +130,19 @@ export function summarize(s: Summary, cloudURL?: string): void {
 
 function icon(n: string): string {
   return `<div align="center"><img src="https://release.ariga.io/images/assets/${n}.svg" /></div>`
+}
+
+export async function comment(opts: Options, text: string) {
+  if(github.context.eventName == 'pull_request') {
+    core.info('were in a PR')
+    const octokit = github.getOctokit(opts.token!)
+    const {name, owner} = github.context.payload.repository!
+    core.info(`name ${name}, owner ${owner}`)
+    const res = octokit.rest.issues.listComments({
+      owner: owner.name!,
+      repo:name,
+      issue_number: github.context.issue.number,
+    })
+    core.info(JSON.stringify(res))
+  }
 }
