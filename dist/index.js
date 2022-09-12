@@ -435,7 +435,7 @@ function comment(opts, text) {
             core.info('were in a PR');
             const octokit = github.getOctokit(opts.token);
             const { name, owner } = github.context.payload.repository;
-            core.info(`name ${name}, owner ${owner}`);
+            core.info(`name ${name}, owner ${JSON.stringify(owner)}`);
             const res = octokit.rest.issues.listComments({
                 owner: owner.name,
                 repo: name,
