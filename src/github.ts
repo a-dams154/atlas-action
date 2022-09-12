@@ -133,15 +133,16 @@ function icon(n: string): string {
 }
 
 export async function comment(opts: Options, text: string) {
-  if(github.context.eventName == 'pull_request') {
+  core.info('### comment')
+  if (github.context.eventName == 'pull_request') {
     core.info('were in a PR')
     const octokit = github.getOctokit(opts.token!)
-    const {name, owner} = github.context.payload.repository!
+    const { name, owner } = github.context.payload.repository!
     core.info(`name ${name}, owner ${owner}`)
     const res = octokit.rest.issues.listComments({
       owner: owner.name!,
-      repo:name,
-      issue_number: github.context.issue.number,
+      repo: name,
+      issue_number: github.context.issue.number
     })
     core.info(JSON.stringify(res))
   }

@@ -297,12 +297,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.summarize = exports.report = exports.resolveGitBase = exports.getWorkingDirectory = void 0;
+exports.comment = exports.summarize = exports.report = exports.resolveGitBase = exports.getWorkingDirectory = void 0;
 const core_1 = __nccwpck_require__(2186);
 const fs_1 = __nccwpck_require__(7147);
 const promises_1 = __nccwpck_require__(3292);
 const simple_git_1 = __nccwpck_require__(9103);
 const github = __importStar(__nccwpck_require__(5438));
+const core = __importStar(__nccwpck_require__(2186));
 const path = __importStar(__nccwpck_require__(1017));
 function getWorkingDirectory() {
     var _a;
@@ -427,6 +428,24 @@ exports.summarize = summarize;
 function icon(n) {
     return `<div align="center"><img src="https://release.ariga.io/images/assets/${n}.svg" /></div>`;
 }
+function comment(opts, text) {
+    return __awaiter(this, void 0, void 0, function* () {
+        core.info('### comment');
+        if (github.context.eventName == 'pull_request') {
+            core.info('were in a PR');
+            const octokit = github.getOctokit(opts.token);
+            const { name, owner } = github.context.payload.repository;
+            core.info(`name ${name}, owner ${owner}`);
+            const res = octokit.rest.issues.listComments({
+                owner: owner.name,
+                repo: name,
+                issue_number: github.context.issue.number
+            });
+            core.info(JSON.stringify(res));
+        }
+    });
+}
+exports.comment = comment;
 //# sourceMappingURL=github.js.map
 
 /***/ }),
@@ -478,6 +497,9 @@ function OptionsFromEnv(env) {
     if (input('project-env')) {
         opts.projectEnv = input('project-env');
     }
+    if (input('token')) {
+        opts.token = input('token');
+    }
     return opts;
 }
 exports.OptionsFromEnv = OptionsFromEnv;
@@ -490,29 +512,6 @@ exports.OptionsFromEnv = OptionsFromEnv;
 
 "use strict";
 
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -530,7 +529,6 @@ const github_1 = __nccwpck_require__(5865);
 const github_2 = __nccwpck_require__(5438);
 const cloud_1 = __nccwpck_require__(217);
 const input_1 = __nccwpck_require__(1044);
-const github = __importStar(__nccwpck_require__(5438));
 // Entry point for GitHub Action runner.
 function run(opts) {
     var _a;
@@ -545,6 +543,7 @@ function run(opts) {
             if (payload) {
                 res.cloudURL = payload.createReport.url;
             }
+            yield (0, github_1.comment)(opts, 'hello');
             (0, github_1.report)(opts, res.summary, res.cloudURL);
             if (res.summary) {
                 (0, github_1.summarize)(res.summary);
@@ -561,8 +560,6 @@ function run(opts) {
     });
 }
 exports.run = run;
-(0, core_1.info)(JSON.stringify(github.context));
-(0, core_1.info)(JSON.stringify(process.env));
 const opts = (0, input_1.OptionsFromEnv)(process.env);
 run(opts);
 //# sourceMappingURL=main.js.map
