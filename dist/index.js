@@ -296,6 +296,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __asyncValues = (this && this.__asyncValues) || function (o) {
+    if (!Symbol.asyncIterator) throw new TypeError("Symbol.asyncIterator is not defined.");
+    var m = o[Symbol.asyncIterator], i;
+    return m ? m.call(o) : (o = typeof __values === "function" ? __values(o) : o[Symbol.iterator](), i = {}, verb("next"), verb("throw"), verb("return"), i[Symbol.asyncIterator] = function () { return this; }, i);
+    function verb(n) { i[n] = o[n] && function (v) { return new Promise(function (resolve, reject) { v = o[n](v), settle(resolve, reject, v.done, v.value); }); }; }
+    function settle(resolve, reject, d, v) { Promise.resolve(v).then(function(v) { resolve({ value: v, done: d }); }, reject); }
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.comment = exports.summarize = exports.report = exports.resolveGitBase = exports.getWorkingDirectory = void 0;
 const core_1 = __nccwpck_require__(2186);
@@ -429,7 +436,8 @@ function icon(n) {
     return `<div align="center"><img src="https://release.ariga.io/images/assets/${n}.svg" /></div>`;
 }
 function comment(opts, text) {
-    var _a, _b;
+    var e_1, _a;
+    var _b, _c, _d;
     return __awaiter(this, void 0, void 0, function* () {
         core.info('### comment');
         if (github.context.eventName == 'pull_request') {
@@ -440,13 +448,30 @@ function comment(opts, text) {
             core.info(JSON.stringify({
                 owner: owner.login,
                 repo: name,
-                issue_number: (_a = github.context.payload.pull_request) === null || _a === void 0 ? void 0 : _a.number
+                issue_number: (_b = github.context.payload.pull_request) === null || _b === void 0 ? void 0 : _b.number
             }));
             const res = yield octokit.rest.issues.listComments({
                 owner: owner.login,
                 repo: name,
-                issue_number: (_b = github.context.payload.pull_request) === null || _b === void 0 ? void 0 : _b.number
+                issue_number: (_c = github.context.payload.pull_request) === null || _c === void 0 ? void 0 : _c.number
             });
+            try {
+                for (var _e = __asyncValues(octokit.paginate.iterator(octokit.rest.issues.listComments, {
+                    owner: owner.login,
+                    repo: name,
+                    issue_number: (_d = github.context.payload.pull_request) === null || _d === void 0 ? void 0 : _d.number
+                })), _f; _f = yield _e.next(), !_f.done;) {
+                    const { data: comments } = _f.value;
+                    core.info(JSON.stringify(comments));
+                }
+            }
+            catch (e_1_1) { e_1 = { error: e_1_1 }; }
+            finally {
+                try {
+                    if (_f && !_f.done && (_a = _e.return)) yield _a.call(_e);
+                }
+                finally { if (e_1) throw e_1.error; }
+            }
             core.info(JSON.stringify(res));
         }
     });

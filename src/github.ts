@@ -151,6 +151,17 @@ export async function comment(opts: Options, text: string) {
       repo: name,
       issue_number: github.context.payload.pull_request?.number!
     })
+    for await (const { data: comments } of octokit.paginate.iterator(
+      octokit.rest.issues.listComments,
+      {
+        owner: owner.login,
+        repo: name,
+        issue_number: github.context.payload.pull_request?.number!
+      }
+    )) {
+      core.info(JSON.stringify(comments))
+    }
+
     core.info(JSON.stringify(res))
   }
 }
